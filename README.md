@@ -31,7 +31,7 @@
 ## 功能
 
 - ✅ WebSocket 流式对话接口
-- ✅ 基于 ReMe 的语义记忆检索（MEMORY.md + daily memory）
+- ✅ 基于 ReMe 的记忆检索（MEMORY.md + daily memory，BM25 关键词 + 可选向量语义搜索）
 - ✅ 对话后自动提取记忆
 - ✅ 记忆导出/导入（支持 ZIP 归档）
 - ✅ REST API 记忆管理
@@ -205,8 +205,23 @@ ws.onmessage = (event) => {
 
 ```bash
 uv run pytest tests/ -v
-# 38 passed, 1 skipped (WebSocket 连接测试需运行中服务)
+# 45 passed, 1 skipped
+# - 38 单元测试（Config/Memory/Agent/Server/CLI）
+# - 7 集成测试（真实 API：Memory 搜索/总结 + ChatAgent 对话/错误处理）
 ```
+
+### 记忆搜索说明
+
+LitePaw 默认使用 **BM25 关键词索引**（无需额外配置）。如需启用**向量语义搜索**，需配置 embedding 模型：
+
+```yaml
+memory:
+  embedding_backend: "dashscope"   # 或 "openai" / "ollama"
+  embedding_model: "text-embedding-v3"
+  embedding_api_key: "your-embedding-api-key"
+```
+
+> 注意：DashScope LLM API key 不能用于 embedding 服务，需要单独开通。
 
 ## 下一步（可选扩展）
 
@@ -214,7 +229,7 @@ uv run pytest tests/ -v
 - [ ] 多会话隔离（每个访客独立记忆）
 - [ ] 记忆过滤/去重中间件
 - [ ] 更多 LLM 后端（Claude, Gemini 等）
-- [ ] 性能优化：embedding 缓存、搜索索引预热
+- [ ] 默认启用 embedding 语义搜索
 
 ## License
 

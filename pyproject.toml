@@ -11,4 +11,9 @@ dependencies = [
     "agentscope>=0.1.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
+    "click>=8.0",
 ]
+
+[project.scripts]
+litepaw = "litepaw.main:main"
+litepaw-memory = "litepaw.memory_tool:cli"

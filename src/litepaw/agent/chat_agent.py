@@ -43,10 +43,10 @@ class ChatAgent:
         # Initialize LLM
         llm_cfg = self.settings.llm
         if llm_cfg.base_url:
+            from agentscope.credential import OpenAICredential
             self._model = OpenAIChatModel(
-                model_name=llm_cfg.model,
-                api_key=llm_cfg.api_key,
-                base_url=llm_cfg.base_url,
+                model=llm_cfg.model,
+                credential=OpenAICredential(api_key=llm_cfg.api_key, base_url=llm_cfg.base_url),
                 stream=True,
             )
             self._formatter = OpenAIChatFormatter()

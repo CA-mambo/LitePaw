@@ -1,0 +1,28 @@
+INFO .venv\Lib\site-packages\reme\application.py:37 | 2026-08-02 17:39:06 | Initializing ReMe Application v0.4.1.3
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:149 | 2026-08-02 17:39:06 | default: chunk store load complete: chunks=0, elapsed=0.000s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:156 | 2026-08-02 17:39:06 | default: graph consistency check complete: repaired=False, elapsed=0.000s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:165 | 2026-08-02 17:39:06 | default: BM25/keyword index sync complete: backend=BM25Index, docs=0, elapsed=0.000s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:169 | 2026-08-02 17:39:06 | default: file store load phases complete: elapsed=0.001s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:80 | 2026-08-02 17:39:06 | default: file store load complete: chunks=0, elapsed=0.002s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:235 | 2026-08-02 17:39:06 | default: embedding backfill skipped: reason=embedding_disabled, elapsed=0.000s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:87 | 2026-08-02 17:39:06 | default: embedding backfill scheduling complete: scheduled=False, elapsed=0.000s
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:92 | 2026-08-02 17:39:06 | default: file store startup complete: elapsed=0.003s
+INFO .venv\Lib\site-packages\reme\application.py:205 | 2026-08-02 17:39:06 | Starting background job: index_update_loop
+INFO .venv\Lib\site-packages\reme\steps\evolve\auto_memory.py:238 | 2026-08-02 17:39:06 | [AutoMemoryStep] start session_id='test-session' raw_messages=4 messages=4 hint=False
+INFO .venv\Lib\site-packages\reme\steps\evolve\auto_memory.py:159 | 2026-08-02 17:39:06 | [AutoMemoryStep] save session start session_id='test-session' messages=4 path=C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_session\dialog\test-session.jsonl
+INFO .venv\Lib\site-packages\reme\steps\index\init_changes.py:75 | 2026-08-02 17:39:06 | [InitChangesStep] scan file_store:default: {'added': 2, 'modified': 0, 'deleted': 0}
+INFO .venv\Lib\site-packages\reme\steps\index\update_changes.py:101 | 2026-08-02 17:39:06 | Detected 2 added file(s)
+INFO .venv\Lib\site-packages\reme\steps\index\update_changes.py:257 | 2026-08-02 17:39:06 | Applying added batch to file_store: files=2 estimated_bytes=74880
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:438 | 2026-08-02 17:39:06 | Saved 2 chunks to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_store\file_chunks_default_v1.jsonl.zst
+INFO .venv\Lib\site-packages\reme\components\keyword_index\bm25_index.py:362 | 2026-08-02 17:39:06 | Saved 2 docs to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\keyword_index\bm25_default_regex_7748e1d5a050_v1.pkl
+INFO .venv\Lib\site-packages\reme\components\file_graph\local_file_graph.py:45 | 2026-08-02 17:39:06 | Saved 2 nodes to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_graph\default.jsonl.zst
+INFO .venv\Lib\site-packages\reme\steps\index\watch_changes.py:88 | 2026-08-02 17:39:06 | Watching: ['C:\\Users\\11938\\AppData\\Local\\Temp\\tmpgqcafev7\\memory', 'C:\\Users\\11938\\AppData\\Local\\Temp\\tmpgqcafev7\\digest'] step=1000ms debounce=5000ms poll_delay=5000ms
+INFO .venv\Lib\site-packages\reme\steps\evolve\auto_memory.py:207 | 2026-08-02 17:39:06 | [AutoMemoryStep] save session rewrote session_id='test-session' existing=0 total=4
+INFO .venv\Lib\site-packages\reme\steps\evolve\auto_memory.py:277 | 2026-08-02 17:39:06 | [AutoMemoryStep] list failed session_id='test-session' answer='Job daily_list not found'
+INFO .venv\Lib\site-packages\reme\components\file_store\local_file_store.py:438 | 2026-08-02 17:39:07 | Saved 2 chunks to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_store\file_chunks_default_v1.jsonl.zst
+INFO .venv\Lib\site-packages\reme\components\keyword_index\bm25_index.py:362 | 2026-08-02 17:39:07 | Saved 2 docs to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\keyword_index\bm25_default_regex_7748e1d5a050_v1.pkl
+INFO .venv\Lib\site-packages\reme\components\file_graph\local_file_graph.py:45 | 2026-08-02 17:39:07 | Saved 2 nodes to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_graph\default.jsonl.zst
+INFO .venv\Lib\site-packages\reme\components\keyword_index\bm25_index.py:362 | 2026-08-02 17:39:07 | Saved 2 docs to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\keyword_index\bm25_default_regex_7748e1d5a050_v1.pkl
+INFO .venv\Lib\site-packages\reme\components\file_graph\local_file_graph.py:45 | 2026-08-02 17:39:07 | Saved 2 nodes to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_graph\default.jsonl.zst
+INFO .venv\Lib\site-packages\reme\components\file_catalog\local_file_catalog.py:33 | 2026-08-02 17:39:07 | Saved 0 nodes to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_catalog\digest.jsonl.zst
+INFO .venv\Lib\site-packages\reme\components\file_catalog\local_file_catalog.py:33 | 2026-08-02 17:39:07 | Saved 0 nodes to C:\Users\11938\AppData\Local\Temp\tmpgqcafev7\mem_metadata\file_catalog\default.jsonl.zst

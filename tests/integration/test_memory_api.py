@@ -143,7 +143,24 @@ class TestMemoryWithRealAPI:
     reason="LITEPAW_LLM_API_KEY not set",
 )
 class TestChatAgentWithRealAPI:
-    """ChatAgent integration tests with real API."""
+    """ChatAgent behavior with real LLM API and Memory."""
+
+    @pytest.fixture
+    def workspace(self):
+        """Create workspace with memory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ws = Path(tmpdir)
+            mem_dir = ws / "memory"
+            mem_dir.mkdir()
+
+            (ws / "MEMORY.md").write_text(
+                "# User Memory\n"
+                "- 用户是 Python 开发者\n"
+                "- 偏好异步代码\n"
+                "- 正在开发 LitePaw 项目\n",
+                encoding="utf-8",
+            )
+            yield ws
 
     @pytest.mark.asyncio
     async def test_chat_agent_initializes_with_real_api(self):
@@ -166,6 +183,121 @@ class TestChatAgentWithRealAPI:
         # Should not raise
         assert agent is not None
         assert agent.settings.llm.api_key == os.getenv("LITEPAW_LLM_API_KEY")
+
+    @pytest.mark.asyncio
+    async def test_chatagent_responds_with_real_api(self, workspace):
+        """A-Real-1: ChatAgent returns real LLM response."""
+        from litepaw.config.settings import Settings
+        from litepaw.agent.chat_agent import ChatAgent
+
+        settings = Settings(
+            agent_id="test-real-api",
+            workspace_dir=str(workspace),
+            llm={
+                "model": os.getenv("LITEPAW_LLM_MODEL", "qwen-plus"),
+                "api_key": os.getenv("LITEPAW_LLM_API_KEY"),
+                "base_url": os.getenv("LITEPAW_LLM_BASE_URL"),
+            },
+            memory={
+                "language": "zh",
+                "daily_dir": "memory",
+            },
+        )
+
+        agent = ChatAgent(settings)
+
+        try:
+            chunks = []
+            async for text, meta in agent.chat("你好，请自我介绍"):
+                chunks.append((text, meta))
+                if meta.get("done"):
+                    break
+
+            # Should receive at least one chunk
+            assert len(chunks) > 0, "Should receive response chunks"
+
+            # Last chunk should have done=True
+            last_meta = chunks[-1][1]
+            assert last_meta.get("done") is True
+
+            # Full response should be non-empty
+            full_text = "".join(t for t, _ in chunks)
+            assert len(full_text) > 0, "Should receive non-empty response"
+
+        finally:
+            await agent.close()
+
+    @pytest.mark.asyncio
+    async def test_chatagent_uses_memory_context(self, workspace):
+        """A-Real-2: ChatAgent uses memory context in response."""
+        from litepaw.config.settings import Settings
+        from litepaw.agent.chat_agent import ChatAgent
+
+        settings = Settings(
+            agent_id="test-real-api",
+            workspace_dir=str(workspace),
+            llm={
+                "model": os.getenv("LITEPAW_LLM_MODEL", "qwen-plus"),
+                "api_key": os.getenv("LITEPAW_LLM_API_KEY"),
+                "base_url": os.getenv("LITEPAW_LLM_BASE_URL"),
+            },
+            memory={
+                "language": "zh",
+                "daily_dir": "memory",
+            },
+        )
+
+        agent = ChatAgent(settings)
+
+        try:
+            # Ask about something in memory
+            chunks = []
+            async for text, meta in agent.chat("你知道我是什么职业吗"):
+                chunks.append((text, meta))
+                if meta.get("done"):
+                    break
+
+            full_text = "".join(t for t, _ in chunks)
+            assert len(full_text) > 0
+
+        finally:
+            await agent.close()
+
+    @pytest.mark.asyncio
+    async def test_chatagent_handles_errors_gracefully(self, workspace):
+        """A-Real-3: ChatAgent returns friendly error on failure."""
+        from litepaw.config.settings import Settings
+        from litepaw.agent.chat_agent import ChatAgent
+
+        settings = Settings(
+            agent_id="test-real-api",
+            workspace_dir=str(workspace),
+            llm={
+                "model": os.getenv("LITEPAW_LLM_MODEL", "qwen-plus"),
+                "api_key": "invalid-key-should-fail",
+                "base_url": os.getenv("LITEPAW_LLM_BASE_URL"),
+            },
+            memory={
+                "language": "zh",
+                "daily_dir": "memory",
+            },
+        )
+
+        agent = ChatAgent(settings)
+
+        try:
+            chunks = []
+            async for text, meta in agent.chat("你好"):
+                chunks.append((text, meta))
+
+            # Should receive error message, not exception
+            assert len(chunks) == 1
+            assert chunks[0][1].get("error") is True
+            # Error message should be user-friendly
+            assert "错误" in chunks[0][0] or "error" in chunks[0][0].lower()
+
+        finally:
+            await agent.close()
 
 
 if __name__ == "__main__":

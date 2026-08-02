@@ -1,95 +1,68 @@
-# LitePaw — 轻量级 QwenPaw 记忆服务
+# LitePaw
 
-从 QwenPaw 提取核心 ReMeLight 记忆模块，剥离前端、多 channel、MCP 工具市场等重型组件，仅保留 **LLM 对话 + 双向记忆读写** 能力，用于个人博客部署。
+轻量级 AI 记忆对话服务，支持 WebSocket 流式对话与双向记忆检索，适用于个人博客集成。
 
-## 架构
+## 特性
 
-```
-┌──────────────────────────────────────┐
-│         LitePaw Service              │
-│                                      │
-│  ┌────────────┐   ┌───────────────┐  │
-│  │ WebSocket  │──▶│ Agent Core    │  │
-│  │ Server     │   │ (LLM + Memory)│  │
-│  └────────────┘   └───────┬───────┘  │
-│                           │          │
-│              ┌────────────▼───────┐  │
-│              │ ReMeLight Memory   │  │
-│              │ - memory_search    │  │
-│              │ - summarize        │  │
-│              │ - auto_memory      │  │
-│              └────────┬───────────┘  │
-│                       │              │
-│              ┌────────▼───────┐      │
-│              │ Memory Files   │      │
-│              │ - MEMORY.md    │      │
-│              │ - memory/*.md  │      │
-│              └────────────────┘      │
-└──────────────────────────────────────┘
-```
-
-## 功能
-
-- ✅ WebSocket 流式对话接口
-- ✅ 基于 ReMe 的记忆检索（MEMORY.md + daily memory，BM25 关键词 + 可选向量语义搜索）
-- ✅ 对话后自动提取记忆
-- ✅ 记忆导出/导入（支持 ZIP 归档）
-- ✅ REST API 记忆管理
-- ✅ 可插拔 LLM 后端（DashScope / OpenAI 兼容）
+- WebSocket 流式对话 + 自动记忆检索
+- ReMeLight 记忆引擎（BM25 关键词 / 可选向量语义搜索）
+- 对话后自动提取并持久化记忆
+- 可插拔 LLM 后端（DashScope / OpenAI 兼容）
+- Docker 一键部署
 
 ## 快速开始
 
-### 1. 安装
+### 安装
 
 ```bash
 uv sync
 ```
 
-### 2. 配置
+### 配置
+
+最少只需设置一个环境变量：
 
 ```bash
-cp config.example.yaml config.yaml
-# 编辑 config.yaml，填入 api_key
+export LITEPAW_LLM_API_KEY="your-api-key"
 ```
 
-最少配置：
+完整配置可通过 `.env` 或 `config.yaml`（复制 `.env.example` / `config.example.yaml`）：
 
 ```yaml
 llm:
   model: "qwen-plus"
-  api_key: "your-dashscope-api-key"
+  api_key: "your-api-key"
 
 memory:
   language: "zh"
+  # 可选：向量语义搜索
+  # embedding_backend: "dashscope"
+  # embedding_model: "text-embedding-v3"
+  # embedding_api_key: "your-embedding-key"
 ```
 
-### 3. 启动服务
+### 启动
 
 ```bash
-uv run litepaw --config config.yaml
-# 或使用环境变量
-export LITEPAW_LLM_MODEL=qwen-plus
-export LITEPAW_LLM_API_KEY=your-key
 uv run litepaw
 ```
 
 服务默认监听 `0.0.0.0:8765`。
 
-## 接口文档
+## 接口
 
 ### WebSocket 对话
 
-连接 `ws://host:port/ws/chat`，发送 JSON：
+连接 `ws://host:8765/ws/chat`，发送：
 
 ```json
-{"content": "你还记得我上次说的 xxx 吗？"}
+{"content": "你还记得我上次说的项目吗？"}
 ```
 
-服务端流式返回：
+流式返回：
 
 ```json
-{"type": "chunk", "content": "是的", "done": false, "memory_used": false, "memory_files": []}
-{"type": "chunk", "content": "，我记得...", "done": false, "memory_used": true, "memory_files": ["MEMORY.md"]}
+{"type": "chunk", "content": "是的", "done": false, "memory_used": true, "memory_files": ["MEMORY.md"]}
 {"type": "done", "session_id": "abc12345"}
 ```
 
@@ -97,107 +70,49 @@ uv run litepaw
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `/api/memory/export` | POST | 导出所有记忆文件 |
-| `/api/memory/import` | POST | 导入记忆文件 |
-| `/api/memory/list-memory` | POST | 列出所有记忆文件 |
-| `/api/memory/search` | POST | 语义搜索记忆 |
+| `/api/memory/export` | POST | 导出记忆（ZIP） |
+| `/api/memory/import` | POST | 导入记忆 |
+| `/api/memory/list-memory` | POST | 列出记忆文件 |
+| `/api/memory/search` | POST | 搜索记忆 |
 
 ### CLI 工具
 
 ```bash
-uv run litepaw-memory --workspace ./workspace export memory-backup.zip
-uv run litepaw-memory --workspace ./workspace import-memory memory-backup.zip
-uv run litepaw-memory --workspace ./workspace list-memory
+uv run litepaw-memory --workspace ./workspace export backup.zip
+uv run litepaw-memory --workspace ./workspace import-memory backup.zip
 uv run litepaw-memory --workspace ./workspace search-memory "关键词"
 ```
 
-## 项目结构
-
-```
-src/litepaw/
-├── memory/                  # 记忆模块（移植自 QwenPaw）
-│   ├── base_memory_manager.py    # 抽象基类
-│   ├── reme_light_memory_manager.py  # ReMe 轻量记忆实现
-│   ├── reme_config.py            # ReMe 配置构建
-│   └── prompts.py                # 记忆引导提示词
-├── agent/
-│   └── chat_agent.py        # LLM + Memory 对话接口
-├── config/
-│   └── settings.py          # Pydantic 配置模型
-├── server/
-│   └── ws_server.py         # FastAPI + WebSocket + REST
-└── memory_tool.py           # CLI 记忆管理工具
-```
-
-## 与 QwenPaw 的关系
-
-**保留的核心：**
-- `ReMeLightMemoryManager` — ReMe 轻量记忆引擎
-- `build_reme_app_config` — ReMe 配置构建
-- `build_memory_guidance_prompt` — 记忆引导提示词
-
-**剥离的组件：**
-- ❌ CLI / Tauri 桌面 / Web Console
-- ❌ Telegram / Discord / WeChat Channel
-- ❌ MCP 工具市场 / 插件系统
-- ❌ Sandbox / Docker / Checkpoints / Governance
-
-## 记忆文件结构
-
-```
-workspace/
-├── MEMORY.md              # 长期记忆
-├── memory/                # 每日记忆摘要
-│   ├── 2026-08-01.md
-│   └── 2026-08-02.md
-├── mem_metadata/          # ReMe 元数据
-└── mem_session/           # ReMe 会话日志
-```
-
-## 博客部署
+## 部署
 
 ### Docker
 
-```dockerfile
-FROM python:3.10-slim
-WORKDIR /app
-COPY . .
-RUN pip install uv && uv sync --no-dev
-EXPOSE 8765
-CMD ["uv", "run", "litepaw", "--config", "config.yaml"]
+```bash
+docker compose up -d
 ```
 
-### Nginx 反向代理
+### Nginx 反代
 
 ```nginx
-server {
-    listen 443 ssl;
-    server_name your-blog.example.com;
-
-    location /ws/ {
-        proxy_pass http://127.0.0.1:8765/ws/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8765/api/;
-        proxy_set_header Host $host;
-    }
+location /ws/ {
+    proxy_pass http://127.0.0.1:8765/ws/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+location /api/ {
+    proxy_pass http://127.0.0.1:8765/api/;
 }
 ```
 
-### 前端接入示例
+### 前端接入
 
-```javascript
-const ws = new WebSocket('wss://your-blog.example.com/ws/chat');
+```js
+const ws = new WebSocket('wss://your-domain/ws/chat');
 ws.onopen = () => ws.send(JSON.stringify({ content: '你好！' }));
-ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'chunk') appendToChat(data.content);
-    else if (data.type === 'done') console.log('Done');
+ws.onmessage = (e) => {
+  const d = JSON.parse(e.data);
+  if (d.type === 'chunk') appendToChat(d.content);
 };
 ```
 
@@ -205,31 +120,18 @@ ws.onmessage = (event) => {
 
 ```bash
 uv run pytest tests/ -v
-# 45 passed, 1 skipped
-# - 38 单元测试（Config/Memory/Agent/Server/CLI）
-# - 7 集成测试（真实 API：Memory 搜索/总结 + ChatAgent 对话/错误处理）
 ```
 
-### 记忆搜索说明
+## 项目结构
 
-LitePaw 默认使用 **BM25 关键词索引**（无需额外配置）。如需启用**向量语义搜索**，需配置 embedding 模型：
-
-```yaml
-memory:
-  embedding_backend: "dashscope"   # 或 "openai" / "ollama"
-  embedding_model: "text-embedding-v3"
-  embedding_api_key: "your-embedding-api-key"
 ```
-
-> 注意：DashScope LLM API key 不能用于 embedding 服务，需要单独开通。
-
-## 下一步（可选扩展）
-
-- [ ] 添加 agent_md_manager.py（MEMORY.md 自动维护）
-- [ ] 多会话隔离（每个访客独立记忆）
-- [ ] 记忆过滤/去重中间件
-- [ ] 更多 LLM 后端（Claude, Gemini 等）
-- [ ] 默认启用 embedding 语义搜索
+src/litepaw/
+├── config/     # Pydantic 配置模型
+├── memory/     # ReMeLight 记忆引擎
+├── agent/      # LLM + Memory 对话接口
+├── server/     # FastAPI + WebSocket + REST
+└── memory_tool.py  # CLI 工具
+```
 
 ## License
 

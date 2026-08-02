@@ -72,7 +72,7 @@ def export(ctx, output):
     click.echo(f"Exported {len(memory_files)} files to {output_path}")
 
 
-@cli.command()
+@cli.command(name="import-memory")
 @click.argument("input_zip", type=click.Path(exists=True))
 @click.option("--merge/--overwrite", default=True, help="Merge with existing files (default: merge)")
 @click.pass_context
@@ -85,7 +85,7 @@ def import_(ctx, input_zip, merge):
     with zipfile.ZipFile(input_zip, "r") as zf:
         for name in zf.namelist():
             target = workspace / name
-            if not merge and target.exists():
+            if merge and target.exists():
                 click.echo(f"Skipping existing file: {name}")
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +96,7 @@ def import_(ctx, input_zip, merge):
     click.echo(f"Imported {imported} files to {workspace}")
 
 
-@cli.command()
+@cli.command(name="list-memory")
 @click.pass_context
 def list_(ctx):
     """List all memory files."""
@@ -118,11 +118,11 @@ def list_(ctx):
         click.echo(f"  {name} ({size} bytes)")
 
 
-@cli.command()
+@cli.command(name="search-memory")
 @click.argument("query")
 @click.option("--max-results", default=10, help="Max results to show")
 @click.pass_context
-def search(ctx, query, max_result):
+def search(ctx, query, max_results):
     """Search memory files (keyword-based, no embedding required)."""
     workspace: Path = ctx.obj["workspace"]
     daily_dir: str = ctx.obj["daily_dir"]
@@ -154,7 +154,7 @@ def search(ctx, query, max_result):
         return
 
     click.echo(f"Found {len(results)} matches for '{query}':")
-    for r in results[:max_result]:
+    for r in results[:max_results]:
         click.echo(f"\n--- {r['file']}:{r['line']}")
         click.echo(r["context"])
 

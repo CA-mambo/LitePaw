@@ -1,6 +1,32 @@
-# LitePaw
+# LitePaw — 轻量级 QwenPaw 记忆服务
 
-轻量级 QwenPaw 记忆服务，用于个人博客部署。从 QwenPaw 提取核心 ReMeLight 记忆模块，剥离前端、多 channel、MCP 工具市场等重型组件，仅保留 **LLM 对话 + 双向记忆读写** 能力。
+从 QwenPaw 提取核心 ReMeLight 记忆模块，剥离前端、多 channel、MCP 工具市场等重型组件，仅保留 **LLM 对话 + 双向记忆读写** 能力，用于个人博客部署。
+
+## 架构
+
+```
+┌──────────────────────────────────────┐
+│         LitePaw Service              │
+│                                      │
+│  ┌────────────┐   ┌───────────────┐  │
+│  │ WebSocket  │──▶│ Agent Core    │  │
+│  │ Server     │   │ (LLM + Memory)│  │
+│  └────────────┘   └───────┬───────┘  │
+│                           │          │
+│              ┌────────────▼───────┐  │
+│              │ ReMeLight Memory   │  │
+│              │ - memory_search    │  │
+│              │ - summarize        │  │
+│              │ - auto_memory      │  │
+│              └────────┬───────────┘  │
+│                       │              │
+│              ┌────────▼───────┐      │
+│              │ Memory Files   │      │
+│              │ - MEMORY.md    │      │
+│              │ - memory/*.md  │      │
+│              └────────────────┘      │
+└──────────────────────────────────────┘
+```
 
 ## 功能
 
@@ -20,8 +46,6 @@ uv sync
 ```
 
 ### 2. 配置
-
-复制示例配置并填写 LLM API 密钥：
 
 ```bash
 cp config.example.yaml config.yaml
@@ -43,11 +67,7 @@ memory:
 
 ```bash
 uv run litepaw --config config.yaml
-```
-
-或使用环境变量：
-
-```bash
+# 或使用环境变量
 export LITEPAW_LLM_MODEL=qwen-plus
 export LITEPAW_LLM_API_KEY=your-key
 uv run litepaw
@@ -59,12 +79,10 @@ uv run litepaw
 
 ### WebSocket 对话
 
-连接 `ws://host:port/ws/chat`，发送 JSON 消息：
+连接 `ws://host:port/ws/chat`，发送 JSON：
 
 ```json
-{
-  "content": "你还记得我上次说的 xxx 吗？"
-}
+{"content": "你还记得我上次说的 xxx 吗？"}
 ```
 
 服务端流式返回：
@@ -81,23 +99,16 @@ uv run litepaw
 |------|------|------|
 | `/api/memory/export` | POST | 导出所有记忆文件 |
 | `/api/memory/import` | POST | 导入记忆文件 |
-| `/api/memory/list` | POST | 列出所有记忆文件 |
+| `/api/memory/list-memory` | POST | 列出所有记忆文件 |
 | `/api/memory/search` | POST | 语义搜索记忆 |
 
 ### CLI 工具
 
 ```bash
-# 导出记忆到 ZIP
 uv run litepaw-memory --workspace ./workspace export memory-backup.zip
-
-# 导入记忆
-uv run litepaw-memory --workspace ./workspace import memory-backup.zip
-
-# 列出记忆文件
-uv run litepaw-memory --workspace ./workspace list
-
-# 关键词搜索
-uv run litepaw-memory --workspace ./workspace search "关键词"
+uv run litepaw-memory --workspace ./workspace import-memory memory-backup.zip
+uv run litepaw-memory --workspace ./workspace list-memory
+uv run litepaw-memory --workspace ./workspace search-memory "关键词"
 ```
 
 ## 项目结构
@@ -105,45 +116,53 @@ uv run litepaw-memory --workspace ./workspace search "关键词"
 ```
 src/litepaw/
 ├── memory/                  # 记忆模块（移植自 QwenPaw）
-│   ├── base_memory_manager.py
-│   ├── reme_light_memory_manager.py
-│   ├── reme_config.py
-│   └── prompts.py
-├── agent/                   # Agent 封装
-│   └── chat_agent.py
-├── config/                  # 配置
-│   └── settings.py
-├── server/                  # WebSocket + REST 服务
-│   └── ws_server.py
-└── memory_tool.py           # CLI 工具
+│   ├── base_memory_manager.py    # 抽象基类
+│   ├── reme_light_memory_manager.py  # ReMe 轻量记忆实现
+│   ├── reme_config.py            # ReMe 配置构建
+│   └── prompts.py                # 记忆引导提示词
+├── agent/
+│   └── chat_agent.py        # LLM + Memory 对话接口
+├── config/
+│   └── settings.py          # Pydantic 配置模型
+├── server/
+│   └── ws_server.py         # FastAPI + WebSocket + REST
+└── memory_tool.py           # CLI 记忆管理工具
 ```
 
 ## 与 QwenPaw 的关系
 
-LitePaw 保留了 QwenPaw 的以下核心组件：
+**保留的核心：**
 - `ReMeLightMemoryManager` — ReMe 轻量记忆引擎
 - `build_reme_app_config` — ReMe 配置构建
 - `build_memory_guidance_prompt` — 记忆引导提示词
 
-剥离了：
-- ❌ CLI 交互式界面
-- ❌ Tauri 桌面客户端
-- ❌ Web Console 前端
-- ❌ Telegram/Discord/WeChat 等 Channel 接入
-- ❌ MCP 工具市场/插件系统
-- ❌ Sandbox / Docker 隔离
-- ❌ Checkpoints / Governance / Tunnel
+**剥离的组件：**
+- ❌ CLI / Tauri 桌面 / Web Console
+- ❌ Telegram / Discord / WeChat Channel
+- ❌ MCP 工具市场 / 插件系统
+- ❌ Sandbox / Docker / Checkpoints / Governance
+
+## 记忆文件结构
+
+```
+workspace/
+├── MEMORY.md              # 长期记忆
+├── memory/                # 每日记忆摘要
+│   ├── 2026-08-01.md
+│   └── 2026-08-02.md
+├── mem_metadata/          # ReMe 元数据
+└── mem_session/           # ReMe 会话日志
+```
 
 ## 博客部署
 
-### Docker 部署（推荐）
+### Docker
 
 ```dockerfile
 FROM python:3.10-slim
 WORKDIR /app
 COPY . .
-RUN pip install uv
-RUN uv sync --no-dev
+RUN pip install uv && uv sync --no-dev
 EXPOSE 8765
 CMD ["uv", "run", "litepaw", "--config", "config.yaml"]
 ```
@@ -170,24 +189,32 @@ server {
 }
 ```
 
-### 前端 WebSocket 接入示例
+### 前端接入示例
 
 ```javascript
 const ws = new WebSocket('wss://your-blog.example.com/ws/chat');
-
-ws.onopen = () => {
-    ws.send(JSON.stringify({ content: '你好！' }));
-};
-
+ws.onopen = () => ws.send(JSON.stringify({ content: '你好！' }));
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    if (data.type === 'chunk') {
-        appendToChat(data.content);
-    } else if (data.type === 'done') {
-        console.log('Response complete');
-    }
+    if (data.type === 'chunk') appendToChat(data.content);
+    else if (data.type === 'done') console.log('Done');
 };
 ```
+
+## 测试
+
+```bash
+uv run pytest tests/ -v
+# 38 passed, 1 skipped (WebSocket 连接测试需运行中服务)
+```
+
+## 下一步（可选扩展）
+
+- [ ] 添加 agent_md_manager.py（MEMORY.md 自动维护）
+- [ ] 多会话隔离（每个访客独立记忆）
+- [ ] 记忆过滤/去重中间件
+- [ ] 更多 LLM 后端（Claude, Gemini 等）
+- [ ] 性能优化：embedding 缓存、搜索索引预热
 
 ## License
 

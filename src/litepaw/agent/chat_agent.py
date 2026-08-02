@@ -126,8 +126,8 @@ class ChatAgent:
                 memory_files = ["MEMORY.md", f"{self.settings.memory.daily_dir}/"]
 
         # Step 2: Build messages
-        system_msg = Msg("system", self._build_system_prompt(), "system")
-        user_msg = Msg("user", user_message, "user")
+        system_msg = Msg(name="system", content=[TextBlock(text=self._build_system_prompt())], role="system")
+        user_msg = Msg(name="user", content=[TextBlock(text=user_message)], role="user")
         messages = [system_msg] + self._history + [user_msg]
 
         # Step 3: Call LLM with streaming
@@ -151,7 +151,7 @@ class ChatAgent:
 
             # Step 4: Update history
             self._history.append(user_msg)
-            assistant_msg = Msg("assistant", full_response, "assistant")
+            assistant_msg = Msg(name="assistant", content=[TextBlock(text=full_response)], role="assistant")
             self._history.append(assistant_msg)
 
             # Step 5: Summarize to memory if enabled

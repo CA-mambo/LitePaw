@@ -1,0 +1,35 @@
+# LitePaw Configuration Example
+# Copy to config.yaml and fill in your values
+
+# Agent
+agent_id: "litepaw-agent"
+
+# Memory workspace root
+workspace_dir: "./workspace"
+
+# LLM Configuration
+llm:
+  model: "qwen-plus"          # LLM model name
+  api_key: ""                  # Your DashScope/API key
+  base_url: ""                 # Optional: custom API endpoint
+  max_tokens: 8192
+
+# Memory Configuration
+memory:
+  backend: "remelight"
+  language: "zh"
+  daily_dir: "memory"
+  metadata_dir: "mem_metadata"
+  session_dir: "mem_session"
+  digest_dir: "digest"
+
+  # Embedding (optional, for semantic search)
+  embedding_backend: ""        # "openai" / "dashscope" / "ollama" / "" to disable
+  embedding_model: ""
+  embedding_api_key: ""
+  embedding_base_url: ""
+  embedding_dimensions: 1024
+
+# Server
+host: "0.0.0.0"
+port: 8765

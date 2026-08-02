@@ -100,3 +100,28 @@ class BaseMemoryManager(ABC):
                 raise
             except BaseException:
                 logger.exception("Summarize task %s failed", task_id)
+
+    async def _shutdown_summarize_worker(
+        self,
+        timeout: float = 5.0,
+    ) -> bool:
+        """Stop the summary worker without allowing shutdown to hang."""
+        self._worker_stopping = True
+        worker = self._worker_task
+        if worker is None:
+            return True
+
+        if not worker.done():
+            worker.cancel()
+            done, _pending = await asyncio.wait({worker}, timeout=timeout)
+            if not done:
+                worker.cancel()
+                logger.error(
+                    "Summary worker did not stop within %.1fs: agent_id=%s",
+                    timeout,
+                    self.agent_id,
+                )
+                return False
+
+        self._worker_task = None
+        return True

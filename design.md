@@ -141,9 +141,45 @@ workspace/
 ## 初始版本目标
 
 - [x] 分析 QwenPaw 记忆模块依赖
-- [ ] 创建项目骨架（入口、配置、WebSocket server）
-- [ ] 移植 ReMeLightMemoryManager
-- [ ] 实现 WebSocket 对话接口
-- [ ] 实现记忆导出/导入
-- [ ] 测试验证
-- [ ] 部署文档
+- [x] 创建项目骨架（入口、配置、WebSocket server）
+- [x] 移植 ReMeLightMemoryManager
+- [x] 实现 WebSocket 对话接口
+- [x] 实现记忆导出/导入
+- [x] 测试验证
+- [x] 部署文档
+
+## 当前项目结构
+
+```
+src/litepaw/
+├── memory/                  # 记忆模块（移植自 QwenPaw）
+│   ├── __init__.py
+│   ├── base_memory_manager.py    # 抽象基类（简化版）
+│   ├── reme_light_memory_manager.py  # ReMe 轻量记忆实现
+│   ├── reme_config.py            # ReMe 配置构建
+│   └── prompts.py                # 记忆引导提示词
+├── agent/                   # Agent 封装
+│   ├── __init__.py
+│   └── chat_agent.py        # LLM + Memory 对话接口
+├── config/                  # 配置
+│   ├── __init__.py
+│   └── settings.py          # Pydantic 配置模型
+├── server/                  # WebSocket + REST 服务
+│   ├── __init__.py
+│   └── ws_server.py         # FastAPI + WebSocket 实现
+└── memory_tool.py           # CLI 记忆管理工具
+```
+
+## Git 提交历史
+
+1. `0274653` — init: add design.md for LitePaw project
+2. `a1b2c3d` — feat: create project skeleton with memory, config, agent, and server modules
+3. `b0294bd` — feat: add memory CLI tool, tests, and README for deployment
+
+## 下一步（可选扩展）
+
+- [ ] 添加 agent_md_manager.py 支持（MEMORY.md 自动维护）
+- [ ] 支持多会话隔离（每个访客独立记忆）
+- [ ] 添加记忆过滤/去重中间件
+- [ ] 支持更多 LLM 后端（Claude, Gemini 等）
+- [ ] 性能优化：embedding 缓存、搜索索引预热

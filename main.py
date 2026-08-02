@@ -6,6 +6,15 @@ import logging
 import sys
 from pathlib import Path
 
+# Load .env file before anything else
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass  # python-dotenv not available
+
 import yaml
 
 from litepaw.config.settings import Settings

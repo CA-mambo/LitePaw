@@ -172,16 +172,37 @@ class ChatAgent:
     @staticmethod
     def _extract_text_from_chunk(chunk) -> str:
         """Extract text content from an AgentScope model response chunk."""
-        if hasattr(chunk, "text"):
-            return chunk.text
-        if hasattr(chunk, "content"):
-            content = chunk.content
-            if isinstance(content, str):
-                return content
-            if isinstance(content, list):
-                for block in content:
-                    if isinstance(block, TextBlock):
-                        return block.text
-                    if isinstance(block, dict) and block.get("type") == "text":
-                        return block.get("text", "")
+        # Handle dict-like objects safely (may raise KeyError on hasattr)
+        try:
+            if hasattr(chunk, "text"):
+                return chunk.text
+        except (KeyError, AttributeError):
+            pass
+        try:
+            if hasattr(chunk, "content"):
+                content = chunk.content
+                if isinstance(content, str):
+                    return content
+                if isinstance(content, list):
+                    for block in content:
+                        if isinstance(block, TextBlock):
+                            return block.text
+                        if isinstance(block, dict) and block.get("type") == "text":
+                            return block.get("text", "")
+        except (KeyError, AttributeError):
+            pass
+
+        # Fallback: try dict access
+        if isinstance(chunk, dict):
+            if "text" in chunk:
+                return chunk["text"]
+            if "content" in chunk:
+                content = chunk["content"]
+                if isinstance(content, str):
+                    return content
+                if isinstance(content, list):
+                    for block in content:
+                        if isinstance(block, dict) and block.get("type") == "text":
+                            return block.get("text", "")
+
         return ""

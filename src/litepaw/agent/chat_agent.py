@@ -51,9 +51,10 @@ class ChatAgent:
             )
             self._formatter = OpenAIChatFormatter()
         else:
+            from agentscope.credential import DashScopeCredential
             self._model = DashScopeChatModel(
-                model_name=llm_cfg.model,
-                api_key=llm_cfg.api_key,
+                model=llm_cfg.model,
+                credential=DashScopeCredential(api_key=llm_cfg.api_key),
                 stream=True,
             )
             self._formatter = DashScopeChatFormatter()

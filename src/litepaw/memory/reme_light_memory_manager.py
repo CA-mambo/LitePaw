@@ -135,23 +135,23 @@ class ReMeLightMemoryManager(BaseMemoryManager):
             return
         try:
             from agentscope.model import DashScopeChatModel, OpenAIChatModel
-            from agentscope.formatter import DashScopeFormatter, OpenAIChatFormatter
+            from agentscope.formatter import DashScopeChatFormatter, OpenAIChatFormatter
+            from agentscope.credential import DashScopeCredential, OpenAICredential
 
             if self._llm_base_url:
                 model = OpenAIChatModel(
-                    model_name=self._llm_model,
-                    api_key=self._llm_api_key or "",
-                    base_url=self._llm_base_url,
+                    model=self._llm_model,
+                    credential=OpenAICredential(api_key=self._llm_api_key or "", base_url=self._llm_base_url),
                     stream=True,
                 )
                 formatter = OpenAIChatFormatter()
             else:
                 model = DashScopeChatModel(
-                    model_name=self._llm_model,
-                    api_key=self._llm_api_key or "",
+                    model=self._llm_model,
+                    credential=DashScopeCredential(api_key=self._llm_api_key or ""),
                     stream=True,
                 )
-                formatter = DashScopeFormatter()
+                formatter = DashScopeChatFormatter()
 
             await self._reme.update_component("as_llm", "default", model=model)
             # Store formatter for later use if needed

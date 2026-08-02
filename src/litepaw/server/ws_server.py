@@ -126,9 +126,6 @@ def create_app(settings: Settings) -> FastAPI:
     @app.post("/api/memory/export")
     async def export_memory():
         """Export memory files as a JSON structure."""
-        if agent is None or agent._memory is None:
-            return JSONResponse(status_code=503, content={"error": "Memory not initialized"})
-
         workspace = Path(settings.workspace_dir)
         memory_data: dict[str, str] = {}
 
@@ -148,9 +145,6 @@ def create_app(settings: Settings) -> FastAPI:
     @app.post("/api/memory/import")
     async def import_memory(data: dict[str, Any]):
         """Import memory files from a JSON structure."""
-        if agent is None or agent._memory is None:
-            return JSONResponse(status_code=503, content={"error": "Memory not initialized"})
-
         workspace = Path(settings.workspace_dir)
         memory_files = data.get("memory_files", {})
 
@@ -161,11 +155,12 @@ def create_app(settings: Settings) -> FastAPI:
             target.write_text(content, encoding="utf-8")
             imported.append(rel_path)
 
-        # Rebuild search index
-        try:
-            await agent._memory.rebuild_index()
-        except Exception:
-            logger.exception("Failed to rebuild memory index after import")
+        # Rebuild search index if agent available
+        if agent is not None and agent._memory is not None:
+            try:
+                await agent._memory.rebuild_index()
+            except Exception:
+                logger.exception("Failed to rebuild memory index after import")
 
         return {"imported": imported, "count": len(imported)}
 

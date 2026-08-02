@@ -17,3 +17,19 @@ dependencies = [
 [project.scripts]
 litepaw = "litepaw.main:main"
 litepaw-memory = "litepaw.memory_tool:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

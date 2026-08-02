@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 
 from agentscope.message import Msg, TextBlock
 from agentscope.model import DashScopeChatModel, OpenAIChatModel
-from agentscope.formatter import DashScopeFormatter, OpenAIChatFormatter
+from agentscope.formatter import DashScopeChatFormatter, OpenAIChatFormatter
 
 from ..config.settings import Settings
 from ..memory import ReMeLightMemoryManager
@@ -56,7 +56,7 @@ class ChatAgent:
                 api_key=llm_cfg.api_key,
                 stream=True,
             )
-            self._formatter = DashScopeFormatter()
+            self._formatter = DashScopeChatFormatter()
 
         # Initialize memory
         mem_cfg = self.settings.memory
